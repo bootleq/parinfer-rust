@@ -137,7 +137,32 @@ endfunction
 function! s:set_cursor_position(position) abort
   let l:cursor = copy(a:position)
   let l:cursor[1] += 1
-  let l:cursor[2] = strlen(strcharpart(getline(l:cursor[1]), 0, l:cursor[2])) + 1
+  " let l:cursor[2] = strlen(strcharpart(getline(l:cursor[1]), 0, l:cursor[2])) + 1
+
+  " Break up above to help study
+  " let l:cursor[2] = strlen(strcharpart(getline(l:cursor[1]), 0, l:cursor[2])) + 1
+  "                                      <----- line ------>
+  "                          <------------------    head   ------------------>
+  "
+  let line = getline(l:cursor[1]) " current line
+  let head = strcharpart(line, 0, l:cursor[2]) " text BEFORE cursor
+  " where l:cursor[2] comes from parinfer response
+  "
+  " Problem: strcharpart counts text by character index, seems doesn't play
+  " well with the l:cursor[2] index.
+  "
+  " Here try use matchstr to get text BEFORE virtual column
+  let head_fix = matchstr(line, '.\+\%<' . (l:cursor[2] + 1 + 1) . 'v')
+  "
+  " Compare with original result
+  call s:log('>> HEAD', {'cursorX': l:cursor[2], 'head': head, 'fix': head_fix})
+
+  " Use the 'fixed' head
+  let l:cursor[2] = strlen(head_fix) + 1
+
+  " Original version
+  " let l:cursor[2] = strlen(head) + 1
+
   call setpos('.', l:cursor)
 endfunction
 
